@@ -1,0 +1,12 @@
+CACHE MANIFEST
+
+CACHE:
+exp-calif-logo-offline.gif
+start.php
+start.manifest
+../CSS/main.css
+../Javascript/bwH5LS.js
+../Javascript/external6.js
+
+FALLBACK:
+exp-calif-logo.gif	exp-calif-logo-offline.gif

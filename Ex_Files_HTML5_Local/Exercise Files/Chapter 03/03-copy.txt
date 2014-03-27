@@ -1,0 +1,34 @@
+
+var createSQL = 'CREATE TABLE IF NOT EXISTS tTravel (' +
+        'id INTEGER PRIMARY KEY,' +
+        'traveler TEXT,' +
+        'destination TEXT,' +
+        'transportation TEXT' +
+    ')';
+
+// Check if this browser supports Web SQL
+function getOpenDatabase() {
+    try {
+        if( !! window.openDatabase ) return window.openDatabase;
+        else return undefined;
+    } catch(e) {
+        return undefined;
+    }
+}
+
+// Open the Web SQL database
+function prepareDatabase() {
+    var odb = getOpenDatabase();
+    if(!odb) {
+        dispError('Web SQL Not Supported');
+        return undefined;
+    } else {
+        var db = odb( 'testDatabase', '1.0', 'A Test Database', 10 * 1024 * 1024 );
+        db.transaction(function (t) {
+            t.executeSql( createSQL, [], function(t, r) {}, function(t, e) {
+                alert('create table: ' + e.message);
+            });
+        });
+        return db;
+    }
+}

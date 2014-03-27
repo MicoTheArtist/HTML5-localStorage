@@ -1,0 +1,25 @@
+function getAddEventListener() {
+    try {
+        if( !! window.addEventListener ) return window.addEventListener;
+    } catch(e) {
+        return undefined;
+    }
+}
+
+function eventHandler(e) {
+    eventStatus('Event triggered: ' + e.url + ' ' + 
+        e.storageArea.traveler + ' ' + e.storageArea.destination + ' ' + e.storageArea.transportation);
+    dispResults();
+}
+
+function eventStatus(s) {
+    if(s) element('eventResult').innerHTML = s;
+    else element('eventResult').innerHTML = 'Event status:';
+}
+
+
+if(addEL) {
+    addEL('storage', eventHandler, false);
+} else {
+    element('eventResult').innerHTML = 'This browser does not support event listeners';
+}

@@ -1,0 +1,74 @@
+var db;
+var dbVersion = '1.0';
+openDB();
+
+// Check if this browser supports indexedDB
+function getIndexedDB() {
+    try {
+        if( ! window.indexedDB ) window.indexedDB = window.mozIndexedDB || window.webkitIndexedDB;
+        if( !! window.indexedDB ) return window.indexedDB;
+        else return undefined;
+    } catch(e) {
+        return undefined;
+    }
+}
+
+// global error handler for indexedDB
+function dbErrorHandler(event) {
+    dispError( 'Database error: ' + event.target.errorCode );
+}
+
+function openDB () {
+    var iDB = getIndexedDB();
+    if(!iDB) {
+        dispError('IndexedDB not supported.');
+        return;
+    } else {
+        try {
+            var request = iDB.open('travelDB', 'demo travel database');
+            request.onerror = function(event) { errorDisplay('Failed to open IndexedDB database.'); }
+            request.onsuccess = function(event) {
+                db = request.result;    // set the global db variable
+                db.onerror = dbErrorHandler;
+                if(db.version != dbVersion) {
+                    var req = db.setVersion(dbVersion);
+                    req.onerror = function(event) { alert('version error: ' + event.target.errorCode); }
+                    req.onsuccess = function(event) {
+                        alert('Creating the object store');
+                        var objectStore = db.createObjectStore('oTravel', { keyPath: 'id', autoIncrement: true });
+                        objectStore.createIndex('traveler', 'ciTraveler', { unique: false });
+                    }
+                }
+            }
+        } catch(e) {
+            dispError( 'Browser supports IndexedDB but didn\'t open the database. (' + e.message + ')');
+        }
+    }
+}
+
+// sometimes the database takes a moment to open
+// provides a retry for the dispResults() function
+var retryCount = 0;
+function retryDisp() {
+    if( ++retryCount > 5 ) {
+        errorDisp('Cannot open the database after 5 retries');
+        dispResults();
+    }
+    setTimeout('dispResults()', 100);
+}
+
+// Main display function
+function dispResults() {
+    if(errorMessage) {
+        element('results').innerHTML = errorMessage;
+        return;
+    }
+
+    if(db) {
+        alert('have db');
+    } else { 
+        // There's been no error, so the databaes is probably still opening
+        retryDisp();
+    }
+}
+

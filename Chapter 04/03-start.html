@@ -1,0 +1,47 @@
+<!doctype html>
+<head>
+	<title>indexedDB storage example</title>
+    <link rel="stylesheet" type="text/css" href="../CSS/main.css">
+    <script src="../Javascript/bwH5LS.js"></script>
+    <script src="../Javascript/external4_1.js"></script>
+</head>
+<body>
+	<div id="content">	<!-- entire body wrapper -->
+    	<h1>indexedDB storage example</h1>
+        <div id="form">	<!-- entire form wrapper -->
+        	<form id="travelForm">
+            	<table class="form">
+                	<tr>
+                    	<td class="label">Traveler</td>
+                        <td><input type="text" name="traveler"></td>
+                    </tr>
+                	<tr>
+                    	<td class="label">Destination</td>
+                        <td><input type="text" name="destination"></td>
+                    </tr>
+                	<tr>
+                    	<td class="label">Transportation</td>
+                        <td><input type="text" name="transportation"></td>
+                    </tr>
+                    <tr>
+                    	<td colspan="2" class="button">
+                        	<input id="formSubmit" type="button" name="goButton" value="Add" onClick="javascript:dbGo()">
+                        </td>
+                    </tr>
+                </table>
+			<input id="inputAction" type="hidden" name="action" value="add">
+            <input id="inputKey" type="hidden" name="key" value="0">
+            </form>
+        </div>
+        
+        <p id="rcp" class="messsage">
+        	There are <span id="rowCount">_</span> rows in the table.
+            <input type="button" value="Empty" onClick="javascript:clearDB()">
+        </p>
+        
+        <div id="results">
+        <!-- results show here -->
+        </div>
+    </div>
+</body>
+</html>

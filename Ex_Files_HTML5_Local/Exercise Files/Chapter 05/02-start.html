@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<!-- 
+    template.html by Bill Weinman 
+    <http://bw.org/contact/>
+    created 2011-04-16
+
+    Copyright (c) 2011 The BearHeart Group, LLC
+    This file may be used for personal educational purposes as needed. 
+    Use for other purposes is granted provided that this notice is
+    retained and any changes made are clearly indicated as such. 
+-->
+
+<head>
+    <title>
+        localStorage example
+    </title>
+    <link rel="stylesheet" type="text/css" href="../CSS/main.css">
+    <script language="javascript" src="../Javascript/bwH5LS.js"></script>
+    <script language="javascript">
+        var t = new bwTable();
+        var db = getLocalStorage() || dispError('Local Storage not supported.');
+
+        function getLocalStorage() {
+            try {
+                if( !! window.localStorage ) return window.localStorage;
+            } catch(e) {
+                return undefined;
+            }
+        }
+
+        function dispResults() {
+            if(errorMessage) {
+                element('results').innerHTML = errorMessage;
+                return;
+            }
+
+            if(db) {
+                var t = new bwTable();
+                t.addRow( ['traveler', db.getItem('traveler')] );
+                t.addRow( ['destination', db.getItem('destination')] );
+                t.addRow( ['transportation', db.getItem('transportation')] );
+                element('results').innerHTML = t.getTableHTML();
+            }
+            element('travelForm').elements['traveler'].focus();
+            element('travelForm').elements['traveler'].select();
+        }
+
+        function dbGo() {
+            if(errorMessage) return;
+            var f = element('travelForm');
+            db.setItem('traveler', f.elements['traveler'].value);
+            db.setItem('destination', f.elements['destination'].value);
+            db.setItem('transportation', f.elements['transportation'].value);
+            dispResults();
+        }
+
+        function dbClear() {
+            if(errorMessage) return;
+            db.clear();
+            dispResults();
+        }
+        
+        function initDisp() {
+            dispResults();
+        }
+
+        window.onload = function() {
+            initDisp();
+        }
+    </script>
+</head>
+
+<body>
+
+<div id="content">
+
+    <h1> 
+        localStorage example
+    </h1>
+    
+    <div id="form">
+        <form id="travelForm">
+            <table class="form">
+                <tr><td class="label"> Traveler </td><td> <input type="text" name="traveler" /> </td></tr>
+                <tr><td class="label"> Destination </td><td> <input type="text" name="destination" /> </td></tr>
+                <tr><td class="label"> Transportation </td><td> <input type="text" name="transportation" /> </td></tr>
+                <tr><td colspan="2" class="button">
+                    <input id="formSubmit" type="button" value="Clear" onClick="javascript:dbClear()" />
+                    <input id="formSubmit" type="button" value="Go" onClick="javascript:dbGo()" />
+                </td></tr>
+            </table>
+        <input id="inputAction" type="hidden" name="action" value="add" />
+        <input id="inputKey" type="hidden" name="key" value="0" />
+        </form>
+    </div>
+
+    <p class="message" id="eventResult">Event status:</p>
+    
+    <div id="results">
+    <!-- results show here -->
+    </div>
+    
+</div>
+</body>
+</html>

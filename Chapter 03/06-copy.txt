@@ -1,0 +1,21 @@
+// confirm and delete a row
+function deleteGo(id, traveler) {
+    if(confirm('Delete ' + traveler + ' (ID: ' + id + ')?')) {
+        db.transaction(function(t) {
+            t.executeSql('DELETE FROM tTravel WHERE id = ?', [id]);
+        });
+        resetTravelForm();
+        dispResults();
+    }
+}
+
+// delete all the rows in the table
+function clearDB() {
+    if(confirm('Clear the entire table?')) {
+        db.transaction(function(t) {
+            t.executeSql('DELETE FROM tTravel');
+        });
+        dispResults();
+    }
+}
+

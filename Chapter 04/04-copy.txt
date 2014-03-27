@@ -1,0 +1,62 @@
+// Main display function
+function dispResults() {
+    if(errorMessage) {
+        element('results').innerHTML = errorMessage;
+        return;
+    }
+
+    if(db) {
+        var bwt = new bwTable();
+        bwt.setHeader(['Traveler', 'Destination', 'Transportation', '']);
+        var count = 0;
+        var objectStore = db.transaction(['oTravel']).objectStore('oTravel');
+        var indexTraveler = objectStore.index("traveler");
+        indexTraveler.openCursor().onsuccess = function(event) {
+            var cursor = event.target.result;
+            if(cursor) {
+                var v = cursor.value;
+                bwt.addRow([v.traveler, v.destination, v.transportation, 'edit/delete buttons']);
+                count++;
+                cursor.continue();
+            } else {    // the cursor is done
+                element('rowCount').innerHTML = count;
+                element('results').innerHTML = bwt.getTableHTML();
+                element('travelForm').elements['traveler'].focus();
+            }
+        }
+    } else { 
+        // There's been no error, so the databaes is probably still opening
+        retryDisp();
+    }
+}
+
+// add or update rows in the table
+function dbGo() {
+    if(errorMessage) return;
+    var f = element('travelForm');
+    var action = f.elements['inputAction'].value;
+    var traveler = f.elements['traveler'].value;
+    var destination = f.elements['destination'].value;
+    var transportation = f.elements['transportation'].value;
+    var key = f.elements['key'].value;
+
+    if(traveler || destination || transportation) {
+        curRec = { traveler: traveler, destination: destination, transportation: transportation,
+            ciTraveler: traveler.toLowerCase() };
+        db.transaction(['oTravel'], IDBTransaction.READ_WRITE).objectStore('oTravel').add(curRec);
+    }
+
+    resetTravelForm();
+    dispResults();
+}
+
+// clear all the form fields and reset the button and action elements
+function resetTravelForm() {
+    var f = element('travelForm');
+    for( var n in [ 'traveler', 'destination', 'transportation', 'key' ] ) {
+        f.elements[n].value = '';
+    }
+    f.elements['inputAction'].value = 'add';
+    f.elements['goButton'].value = 'Add';
+}
+

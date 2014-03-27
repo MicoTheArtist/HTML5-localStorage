@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<!-- 
+    webSQL.html by Bill Weinman 
+    <http://bw.org/contact/>
+    created 2011-04-16
+
+    Copyright (c) 2011 The BearHeart Group, LLC
+    This file may be used for personal educational purposes as needed. 
+    Use for other purposes is granted provided that this notice is
+    retained and any changes made are clearly indicated as such. 
+-->
+
+<head>
+    <title>
+        webSQL storage example
+    </title>
+    <link rel="stylesheet" type="text/css" href="../CSS/main.css">
+    <script language="javascript" src="../Javascript/bwH5LS.js"></script>
+    <script language="javascript">
+        var db = prepareDatabase();
+        var createSQL = 'CREATE TABLE IF NOT EXISTS tTravel (' +
+                'id INTEGER PRIMARY KEY,' +
+                'traveler TEXT,' +
+                'destination TEXT,' +
+                'transportation TEXT' +
+            ')';
+
+        // Check if this browser supports Web SQL
+        function getOpenDatabase() {
+            try {
+                if( !! window.openDatabase ) return window.openDatabase;
+                else return undefined;
+            } catch(e) {
+                return undefined;
+            }
+        }
+
+        // Open the Web SQL database
+        function prepareDatabase() {
+            var odb = getOpenDatabase();
+            if(!odb) {
+                dispError('Web SQL Not Supported');
+                return undefined;
+            } else {
+                var db = odb( 'testDatabase', '1.0', 'A Test Database', 10 * 1024 * 1024 );
+                db.transaction(function (t) {
+                    t.executeSql( createSQL, [], function(t, r) {}, function(t, e) {
+                        alert('create table: ' + e.message);
+                    });
+                });
+                return db;
+            }
+        }
+
+        // How many rows do we have?
+        function countRows() {
+            if(!db) return;
+            db.readTransaction(function (t) {
+                t.executeSql('SELECT COUNT(*) AS c FROM tTravel', [], function (t, r) {
+                    var c = r.rows.item(0).c;
+                    element('rowCount').innerHTML = c ? c : 0;
+                }, function(t, e) {
+                    alert('countRows: ' + e.message);
+                });
+            });
+        }
+
+        // Main display function
+        function dispResults() {
+            if(errorMessage) {
+                element('results').innerHTML = errorMessage;
+                return;
+            }
+
+            countRows();    // update the row count each time the display is refreshed
+
+            if(db) {
+                db.readTransaction(function(t) {    // readTransaction sets the database to read-only
+                    t.executeSql('SELECT * FROM tTravel ORDER BY LOWER(traveler)', [], function(t, r) {
+                        var bwt = new bwTable();
+                        bwt.setHeader(['Traveler', 'Destination', 'Transportation', '']);
+                        for( var i = 0; i < r.rows.length; i++ ) {
+                            var row = r.rows.item(i);
+                            bwt.addRow([row.traveler, row.destination, row.transportation, 'edit / delete buttons']);
+                        }
+                        element('results').innerHTML = bwt.getTableHTML();
+                        element('travelForm').elements['traveler'].focus();
+                    });
+                });
+            }
+        }
+
+        // add or update rows in the table
+        function dbGo() {
+            if(errorMessage) return;
+            var f = element('travelForm');
+            var action = f.elements['inputAction'].value;
+            var traveler = f.elements['traveler'].value;
+            var destination = f.elements['destination'].value;
+            var transportation = f.elements['transportation'].value;
+            var key = f.elements['key'].value;
+
+            if(traveler || destination || transportation) {
+                db.transaction( function(t) {
+                    t.executeSql(' INSERT INTO tTravel ( traveler, destination, transportation ) VALUES ( ?, ?, ? ) ',
+                        [ traveler, destination, transportation ]
+                    );
+                }, function(t, e){ alert('Insert row: ' + e.message); }, function() {
+                    resetTravelForm();
+                });
+            }
+            dispResults();
+        }
+
+        // clear all the form fields and reset the button and action elements
+        function resetTravelForm() {
+            var f = element('travelForm');
+            for( var n in [ 'traveler', 'destination', 'transportation', 'key' ] ) {
+                f.elements[n].value = '';
+            }
+            f.elements['inputAction'].value = 'add';
+            f.elements['goButton'].value = 'Add';
+        }
+
+        function initDisp() {
+            dispResults();
+        }
+
+        window.onload = function() {
+            initDisp();
+        }
+    </script>
+</head>
+
+<body>
+
+<div id="content">
+
+    <h1> 
+        webSQL storage example
+    </h1>
+    
+    <div id="form">
+        <form id="travelForm">
+            <table class="form">
+                <tr><td class="label"> Traveler </td><td> <input type="text" name="traveler" /> </td></tr>
+                <tr><td class="label"> Destination </td><td> <input type="text" name="destination" /> </td></tr>
+                <tr><td class="label"> Transportation </td><td> <input type="text" name="transportation" /> </td></tr>
+                <tr><td colspan="2" class="button">
+                    <input id="formSubmit" type="button" name="goButton" value="Add" onClick="javascript:dbGo()" />
+                </td></tr>
+            </table>
+        <input id="inputAction" type="hidden" name="action" value="add" />
+        <input id="inputKey" type="hidden" name="key" value="0" />
+        </form>
+    </div>
+    
+    <p id="rcp" class="message">
+        There are <span id="rowCount">_</span> rows in the table.
+        <input type="button" value="Empty" onClick="javascript:clearDB()" />
+    </p>
+
+    <div id="results">
+    <!-- results show here -->
+    </div>
+    
+</div>
+</body>
+</html>

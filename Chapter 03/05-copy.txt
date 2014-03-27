@@ -1,0 +1,49 @@
+// Create the Edit and Delete buttons for a row
+function rowButtons( id, traveler ) {
+    return '<form><input type="button" value="Edit" onClick="javascript:editGo(' + id + ')"/>' +
+        '<input type="button" value="Delete" onClick="javascript:deleteGo(' + id + ', &quot;' + traveler + '&quot;)"/></form>';
+}
+
+// update the edited row
+function editGo(id) {
+    db.readTransaction(function(t) {
+        t.executeSql('SELECT * FROM tTravel WHERE id = ?', [id], function(t, r) {
+            var row = r.rows.item(0);
+            if(row) {
+                var f = element('travelForm');
+                f.elements['traveler'].value = row.traveler;
+                f.elements['destination'].value = row.destination;
+                f.elements['transportation'].value = row.transportation;
+                f.elements['goButton'].value = 'Update';
+                f.elements['inputAction'].value = 'update';
+                f.elements['key'].value = row.id;
+                f.elements['traveler'].focus();
+                f.elements['traveler'].select();
+            }
+        });
+    });
+}
+
+// handle either "add" or "update" action
+switch(action) {
+case 'add': 
+    if(! (traveler || destination || transportation)) break;
+    db.transaction( function(t) {
+        t.executeSql(' INSERT INTO tTravel ( traveler, destination, transportation ) VALUES ( ?, ?, ? ) ',
+            [ traveler, destination, transportation ]
+        );
+    }, function(t, e){ alert('Insert row: ' + e.message); }, function() {
+        resetTravelForm();
+    });
+    break;
+case 'update':
+    if(! (traveler || destination || transportation)) break;
+    db.transaction( function(t) {
+        t.executeSql(' UPDATE tTravel SET traveler = ?, destination = ?, transportation = ? WHERE id = ?',
+            [ traveler, destination, transportation, key ]
+        );
+    }, function(t, e){ alert('Update row: ' + e.message); }, function() {
+        resetTravelForm();
+    });
+    break;
+}

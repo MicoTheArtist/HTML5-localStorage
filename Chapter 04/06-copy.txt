@@ -1,0 +1,17 @@
+// confirm and delete a row
+function deleteGo(id, traveler) {
+    if(confirm('Delete ' + traveler + ' (ID: ' + id + ')?')) {
+        db.transaction("oTravel", IDBTransaction.READ_WRITE).objectStore("oTravel").delete(id);
+        resetTravelForm();
+        dispResults();
+    }
+}
+
+// delete all the recs in the store
+function clearDB() {
+    if(confirm('Clear the entire table?')) {
+        db.transaction("oTravel", IDBTransaction.READ_WRITE).objectStore("oTravel").clear();
+        resetTravelForm();
+        dispResults();
+    }
+}

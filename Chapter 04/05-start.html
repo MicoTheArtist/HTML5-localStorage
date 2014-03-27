@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<!-- 
+    indexedDB.html by Bill Weinman 
+    <http://bw.org/contact/>
+    created 2011-04-16
+
+    Copyright (c) 2011 The BearHeart Group, LLC
+    This file may be used for personal educational purposes as needed. 
+    Use for other purposes is granted provided that this notice is
+    retained and any changes made are clearly indicated as such. 
+-->
+
+<head>
+    <title>
+        indexedDB storage example
+    </title>
+    <link rel="stylesheet" type="text/css" href="../CSS/main.css">
+    <script language="javascript" src="../Javascript/bwH5LS.js"></script>
+    <script language="javascript">
+        var db;
+        var dbVersion = '1.0';
+        openDB();
+
+        // Check if this browser supports indexedDB
+        function getIndexedDB() {
+            try {
+                if( ! window.indexedDB ) window.indexedDB = window.mozIndexedDB || window.webkitIndexedDB;
+                if( !! window.indexedDB ) return window.indexedDB;
+                else return undefined;
+            } catch(e) {
+                return undefined;
+            }
+        }
+
+        // global error handler for indexedDB
+        function dbErrorHandler(event) {
+            dispError( 'Database error: ' + event.target.errorCode );
+        }
+
+        function openDB () {
+            var iDB = getIndexedDB();
+            if(!iDB) {
+                dispError('IndexedDB not supported.');
+                return;
+            } else {
+                try {
+                    var request = iDB.open('travelDB', 'demo travel database');
+                    request.onerror = function(event) { errorDisplay('Failed to open IndexedDB database.'); }
+                    request.onsuccess = function(event) {
+                        db = request.result;    // set the global db variable
+                        db.onerror = dbErrorHandler;
+                        if(db.version != dbVersion) {
+                            var req = db.setVersion(dbVersion);
+                            req.onerror = function(event) { alert('version error: ' + event.target.errorCode); }
+                            req.onsuccess = function(event) {
+                                alert('Creating the object store');
+                                var objectStore = db.createObjectStore('oTravel', { keyPath: 'id', autoIncrement: true });
+                                objectStore.createIndex('traveler', 'ciTraveler', { unique: false });
+                            }
+                        }
+                    }
+                } catch(e) {
+                    dispError( 'Browser supports IndexedDB but didn\'t open the database. (' + e.message + ')');
+                }
+            }
+        }
+
+        // sometimes the database takes a moment to open
+        // provides a retry for the dispResults() function
+        var retryCount = 0;
+        function retryDisp() {
+            if( ++retryCount > 5 ) {
+                errorDisp('Cannot open the database after 5 retries');
+                dispResults();
+            }
+            setTimeout('dispResults()', 100);
+        }
+
+        // Main display function
+        function dispResults() {
+            if(errorMessage) {
+                element('results').innerHTML = errorMessage;
+                return;
+            }
+        
+            if(db) {
+                var bwt = new bwTable();
+                bwt.setHeader(['Traveler', 'Destination', 'Transportation', '']);
+                var count = 0;
+                var objectStore = db.transaction(['oTravel']).objectStore('oTravel');
+                var indexTraveler = objectStore.index("traveler");
+                indexTraveler.openCursor().onsuccess = function(event) {
+                    var cursor = event.target.result;
+                    if(cursor) {
+                        var v = cursor.value;
+                        bwt.addRow([v.traveler, v.destination, v.transportation, 'edit/delete buttons']);
+                        count++;
+                        cursor.continue();
+                    } else {    // the cursor is done
+                        element('rowCount').innerHTML = count;
+                        element('results').innerHTML = bwt.getTableHTML();
+                        element('travelForm').elements['traveler'].focus();
+                    }
+                }
+            } else { 
+                // There's been no error, so the databaes is probably still opening
+                retryDisp();
+            }
+        }
+
+        // add or update rows in the table
+        function dbGo() {
+            if(errorMessage) return;
+            var f = element('travelForm');
+            var action = f.elements['inputAction'].value;
+            var traveler = f.elements['traveler'].value;
+            var destination = f.elements['destination'].value;
+            var transportation = f.elements['transportation'].value;
+            var key = f.elements['key'].value;
+        
+            if(traveler || destination || transportation) {
+                curRec = { traveler: traveler, destination: destination, transportation: transportation,
+                    ciTraveler: traveler.toLowerCase() };
+                db.transaction(['oTravel'], IDBTransaction.READ_WRITE).objectStore('oTravel').add(curRec);
+            }
+        
+            resetTravelForm();
+            dispResults();
+        }
+
+        // clear all the form fields and reset the button and action elements
+        function resetTravelForm() {
+            var f = element('travelForm');
+            for( var n in [ 'traveler', 'destination', 'transportation', 'key' ] ) {
+                f.elements[n].value = '';
+            }
+            f.elements['inputAction'].value = 'add';
+            f.elements['goButton'].value = 'Add';
+        }
+
+        function initDisp() {
+            dispResults();
+        }
+
+        window.onload = function() {
+            initDisp();
+        }
+
+    </script>
+</head>
+
+<body>
+
+<div id="content">
+
+    <h1> 
+        indexedDB storage example
+    </h1>
+    
+    <div id="form">
+        <form id="travelForm">
+            <table class="form">
+                <tr><td class="label"> Traveler </td><td> <input type="text" name="traveler" /> </td></tr>
+                <tr><td class="label"> Destination </td><td> <input type="text" name="destination" /> </td></tr>
+                <tr><td class="label"> Transportation </td><td> <input type="text" name="transportation" /> </td></tr>
+                <tr><td colspan="2" class="button">
+                    <input id="formSubmit" type="button" name="goButton" value="Add" onClick="javascript:dbGo()" />
+                </td></tr>
+            </table>
+        <input id="inputAction" type="hidden" name="action" value="add" />
+        <input id="inputKey" type="hidden" name="key" value="0" />
+        </form>
+    </div>
+    
+    <p id="rcp" class="message">
+        There are <span id="rowCount">_</span> rows in the table.
+        <input type="button" value="Empty" onClick="javascript:clearDB()" />
+    </p>
+
+    <div id="results">
+    <!-- results show here -->
+    </div>
+    
+</div>
+</body>
+</html>

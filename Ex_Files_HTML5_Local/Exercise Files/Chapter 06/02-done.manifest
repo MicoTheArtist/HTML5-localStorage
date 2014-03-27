@@ -1,0 +1,11 @@
+CACHE MANIFEST
+
+CACHE:
+exp-calif-logo-offline.gif
+sessionStorage.html
+../CSS/main.css
+../Javascript/bwH5LS.js
+
+FALLBACK:
+exp-calif-logo.gif  exp-calif-logo-offline.gif
+

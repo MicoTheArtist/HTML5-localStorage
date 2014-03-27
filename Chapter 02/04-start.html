@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<link rel="stylesheet" type="text/css" href="../CSS/main.css" media="all">
+    <script src="../Javascript/bwH5LS.js"></script>
+    <script src="../Javascript/external2_4.js"></script>
+</head>
+<bod>
+<div id="content">	<!-- entire body wrapper -->
+
+	<h1>localStorage example</h1>
+    
+    <div id="form">
+    	<form id="travelForm">
+        	<table class="form">
+            	<tr>
+                	<td class="label">Traveler</td>
+                    <td><input type="text" name="traveler"></td>
+                </tr>
+            	<tr>
+                	<td class="label">Destination</td>
+                    <td><input type="text" name="destination"></td>
+                </tr>
+            	<tr>
+                	<td class="label">Transporation</td>
+                    <td><input type="text" name="transportation"></td>
+                </tr>
+            	<tr>
+                    <td colspan="2" class="button">
+                    	<input id="formSubmit" type="button" value="Clear" onClick="javascript:dbClear()">
+						<input id="formSubmit" type="button" value="Go" onClick="javascript:dbGo()">
+                    </td>
+                </tr>
+            </table>
+		<input id="inputAction" type="hidden" name="action" value="add">
+        <input id="input" type="hidden" name="key" value="0">
+        </form>
+    </div>
+    
+    <div id="results">
+    	<!-- results show here -->
+    </div>
+</div>
+</body>
+</html>

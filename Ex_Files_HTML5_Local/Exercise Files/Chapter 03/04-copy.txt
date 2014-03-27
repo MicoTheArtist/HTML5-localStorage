@@ -1,0 +1,70 @@
+// How many rows do we have?
+function countRows() {
+    if(!db) return;
+    db.readTransaction(function (t) {
+        t.executeSql('SELECT COUNT(*) AS c FROM tTravel', [], function (t, r) {
+            var c = r.rows.item(0).c;
+            element('rowCount').innerHTML = c ? c : 0;
+        }, function(t, e) {
+            alert('countRows: ' + e.message);
+        });
+    });
+}
+
+// Main display function
+function dispResults() {
+    if(errorMessage) {
+        element('results').innerHTML = errorMessage;
+        return;
+    }
+
+    countRows();    // update the row count each time the display is refreshed
+
+    if(db) {
+        db.readTransaction(function(t) {    // readTransaction sets the database to read-only
+            t.executeSql('SELECT * FROM tTravel ORDER BY LOWER(traveler)', [], function(t, r) {
+                var bwt = new bwTable();
+                bwt.setHeader(['Traveler', 'Destination', 'Transportation', '']);
+                for( var i = 0; i < r.rows.length; i++ ) {
+                    var row = r.rows.item(i);
+                    bwt.addRow([row.traveler, row.destination, row.transportation, 'edit / delete buttons']);
+                }
+                element('results').innerHTML = bwt.getTableHTML();
+                element('travelForm').elements['traveler'].focus();
+            });
+        });
+    }
+}
+
+// add or update rows in the table
+function dbGo() {
+    if(errorMessage) return;
+    var f = element('travelForm');
+    var action = f.elements['inputAction'].value;
+    var traveler = f.elements['traveler'].value;
+    var destination = f.elements['destination'].value;
+    var transportation = f.elements['transportation'].value;
+    var key = f.elements['key'].value;
+
+    if(traveler || destination || transportation) {
+        db.transaction( function(t) {
+            t.executeSql(' INSERT INTO tTravel ( traveler, destination, transportation ) VALUES ( ?, ?, ? ) ',
+                [ traveler, destination, transportation ]
+            );
+        }, function(t, e){ alert('Insert row: ' + e.message); }, function() {
+            resetTravelForm();
+        });
+    }
+    dispResults();
+}
+
+// clear all the form fields and reset the button and action elements
+function resetTravelForm() {
+    var f = element('travelForm');
+    for( var n in [ 'traveler', 'destination', 'transportation', 'key' ] ) {
+        f.elements[n].value = '';
+    }
+    f.elements['inputAction'].value = 'add';
+    f.elements['goButton'].value = 'Add';
+}
+

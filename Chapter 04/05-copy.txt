@@ -1,0 +1,42 @@
+// Create the Edit and Delete buttons for a row
+function rowButtons( id, traveler ) {
+    return '<form><input type="button" value="Edit" onClick="javascript:editGo(' + id + ')"/>' +
+        '<input type="button" value="Delete" onClick="javascript:deleteGo(' + id + ', &quot;' + traveler + '&quot;)"/></form>';
+}
+
+// update the edited row
+function editGo(id) {
+    db.transaction("oTravel").objectStore("oTravel").get(id).onsuccess = function(event) {
+        rec = event.target.result;
+        if(rec) {
+            var f = element('travelForm');
+            f.elements['traveler'].value = rec.traveler;
+            f.elements['destination'].value = rec.destination;
+            f.elements['transportation'].value = rec.transportation;
+            f.elements['goButton'].value = 'Update';
+            f.elements['inputAction'].value = 'update';
+            f.elements['key'].value = rec.id;
+            f.elements['traveler'].focus();
+            f.elements['traveler'].select();
+        }
+    }
+}
+
+
+    switch(action) {
+    case 'add': 
+        if(! (traveler || destination || transportation)) break;
+        curRec = { traveler: traveler, destination: destination, transportation: transportation,
+            ciTraveler: traveler.toLowerCase() };
+        db.transaction(['oTravel'], IDBTransaction.READ_WRITE).objectStore('oTravel').add(curRec);
+        break;
+    case 'update':
+        if(! (traveler || destination || transportation)) break;
+        curRec = { traveler: traveler, destination: destination, transportation: transportation,
+            ciTraveler: traveler.toLowerCase() };
+        var objectStore = db.transaction("oTravel", IDBTransaction.READ_WRITE).objectStore("oTravel");
+        objectStore.delete(key).onsuccess = function(event) {
+            objectStore.add(curRec);
+        };
+        break;
+    }
